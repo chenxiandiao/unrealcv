@@ -35,7 +35,8 @@ bool CaptureWithSync(UGameViewportClient *ViewportClient, const FString& Capture
 		}
 		else // Capture HDR, unable to read float16 data from here. Need to use a rendertarget.
 		{
-			CaptureFilename.Replace(TEXT(".png"), TEXT(".exr"));
+			FString FileName = CaptureFilename.Replace(TEXT(".png"), TEXT(".exr"));
+			FString & NewFileName = FileName;
 			TArray<FFloat16Color> FloatBitmap;
 			FloatBitmap.AddZeroed(Size.X * Size.Y);
 			InViewport->ReadFloat16Pixels(FloatBitmap);
@@ -43,9 +44,18 @@ bool CaptureWithSync(UGameViewportClient *ViewportClient, const FString& Capture
 			IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
 			TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::EXR);
 
+
+
 			ImageWrapper->SetRaw(FloatBitmap.GetData(), FloatBitmap.GetAllocatedSize(), Size.X, Size.Y, ERGBFormat::RGBA, 16);
-			const TArray<uint8>& PngData = ImageWrapper->GetCompressed();
-			FFileHelper::SaveArrayToFile(PngData, *CaptureFilename);
+
+			
+			TArray<uint8, TSizedDefaultAllocator<64>> SourceArray = ImageWrapper->GetCompressed();
+			TArray<uint8, FDefaultAllocator> DestinationArray;
+
+			// 将SourceArray的元素复制到DestinationArray中
+			DestinationArray.Append(SourceArray.GetData(),SourceArray.Num());
+			TArray<uint8>& PngData = DestinationArray;
+			FFileHelper::SaveArrayToFile(PngData, *NewFileName);
 		}
 
 		return bScreenshotSuccessful;

@@ -157,15 +157,14 @@ FString StringFromBinaryArray(const TArray<uint8>& BinaryArray)
 
 void BinaryArrayFromString(const FString& Message, TArray<uint8>& OutBinaryArray)
 {
-	FTCHARToUTF8 Convert(*Message);
 
 	OutBinaryArray.Empty();
+	// Convert the FString to ANSI characters
+    const ANSICHAR* CharArray = TCHAR_TO_ANSI(*Message);
+    // Append the characters to the binary array
+    int32 Length = FCStringAnsi::Strlen(CharArray);
+    OutBinaryArray.Append((const uint8*)CharArray, Length);
 
-	// const TArray<TCHAR>& CharArray = Message.GetCharArray();
-	// OutBinaryArray.Append(CharArray);
-	// This can work, but will add tailing \0 also behavior is not well defined.
-
-	OutBinaryArray.Append((UTF8CHAR*)Convert.Get(), Convert.Length());
 }
 
 
@@ -179,7 +178,7 @@ bool UNetworkManager::StartEchoService(FSocket* ClientSocket, const FIPv4Endpoin
 {
 	if (!this->ConnectionSocket) // Only maintain one active connection, So just reuse the TCPListener thread.
 	{
-		UE_LOG(LogUnrealCV, Warning, TEXT("New client connected from %s"), *ClientEndpoint.ToString());
+		UE_LOG(LogUnrealCV, Warning, TEXT("New client connected from 123: %s"), *ClientEndpoint.ToString());
 		// ClientSocket->SetNonBlocking(false); // When this in blocking state, I can not use this socket to send message back
 		ConnectionSocket = ClientSocket;
 
@@ -221,7 +220,7 @@ bool UNetworkManager::StartMessageService(FSocket* ClientSocket, const FIPv4Endp
 	{
 		ConnectionSocket = ClientSocket;
 
-		UE_LOG(LogUnrealCV, Warning, TEXT("New client connected from %s"), *ClientEndpoint.ToString());
+		UE_LOG(LogUnrealCV, Warning, TEXT("New client connected from cxd %s"), *ClientEndpoint.ToString());
 		// ClientSocket->SetNonBlocking(false); // When this in blocking state, I can not use this socket to send message back
 		FString Confirm = FString::Printf(TEXT("connected to %s"), *GetProjectName());
 		bool IsSent = this->SendMessage(Confirm); // Send a hello message
@@ -332,10 +331,16 @@ bool UNetworkManager::Start(int32 InPortNum) // Restart the server if configurat
 
 bool UNetworkManager::SendMessage(const FString& Message)
 {
+	UE_LOG(LogUnrealCV, Verbose, TEXT("Send string message %s"), *Message);
 	if (ConnectionSocket)
 	{
 		TArray<uint8> Payload;
 		BinaryArrayFromString(Message, Payload);
+		// Output the result
+		for (uint8 Byte : Payload)
+		{
+			UE_LOG(LogTemp, Display, TEXT("%u"), Byte);
+		}
 		UE_LOG(LogUnrealCV, Verbose, TEXT("Send string message with size %d"), Payload.Num());
 		FSocketMessageHeader::WrapAndSendPayload(Payload, ConnectionSocket);
 		UE_LOG(LogUnrealCV, Verbose, TEXT("Payload sent"), Payload.Num());

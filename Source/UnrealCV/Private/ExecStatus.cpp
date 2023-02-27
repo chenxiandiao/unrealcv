@@ -148,7 +148,10 @@ TArray<uint8> FExecStatus::GetData() const // Define how to format the reply str
 
 void FExecStatus::BinaryArrayFromString(const FString& Message, TArray<uint8>& OutBinaryArray)
 {
-	FTCHARToUTF8 Convert(*Message);
 	OutBinaryArray.Empty();
-	OutBinaryArray.Append((UTF8CHAR*)Convert.Get(), Convert.Length());
+	// Convert the FString to ANSI characters
+    const ANSICHAR* CharArray = TCHAR_TO_ANSI(*Message);
+    // Append the characters to the binary array
+    int32 Length = FCStringAnsi::Strlen(CharArray);
+    OutBinaryArray.Append((const uint8*)CharArray, Length);
 }

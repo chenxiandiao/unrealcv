@@ -73,7 +73,18 @@ TArray<uint8> SerializationUtils::Image2Png(const TArray<FColor>& Image, int Wid
 	static IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
 	static TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
 	ImageWrapper->SetRaw(Image.GetData(), Image.GetAllocatedSize(), Width, Height, ERGBFormat::BGRA, 8);
-	const TArray<uint8>& ImgData = ImageWrapper->GetCompressed();
+	// const TArray<uint8>& ImgData = ImageWrapper->GetCompressed();
+	// cxd
+
+	TArray<uint8, TSizedDefaultAllocator<64>> SourceArray = ImageWrapper->GetCompressed();
+	TArray<uint8, FDefaultAllocator> DestinationArray;
+
+	// 将SourceArray的元素复制到DestinationArray中
+	DestinationArray.Append(SourceArray.GetData(),SourceArray.Num());
+	TArray<uint8>& ImgData = DestinationArray;
+	
+	// return ImgData;
+	// const TArray<uint8>& ImgData = {1,2,3};
 	return ImgData;
 }
 
@@ -83,9 +94,17 @@ TArray<uint8> SerializationUtils::Image2Exr(const TArray<FFloat16Color>& FloatIm
 	{
 		return TArray<uint8>();
 	}
+	// cxd
 	static IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
 	static TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::EXR);
 	ImageWrapper->SetRaw(FloatImage.GetData(), FloatImage.GetAllocatedSize(), Width, Height, ERGBFormat::RGBA, 16);
-	const TArray<uint8>& ExrData = ImageWrapper->GetCompressed();
+	TArray<uint8, TSizedDefaultAllocator<64>> SourceArray = ImageWrapper->GetCompressed();
+	TArray<uint8, FDefaultAllocator> DestinationArray;
+
+	// 将SourceArray的元素复制到DestinationArray中
+	DestinationArray.Append(SourceArray.GetData(),SourceArray.Num());
+	TArray<uint8>& ExrData = DestinationArray;
+	// const TArray<uint8>& ExrData = ImageWrapper->GetCompressed();
 	return ExrData;
+	// return TArray<uint8>();
 }

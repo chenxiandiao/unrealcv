@@ -10,7 +10,7 @@ FServerConfig::FServerConfig()
 	CoreSection = "UnrealCV.Core";
 
 	// Default value, will be unchanged if the config is missing.
-	Port = 9000; 
+	Port = 9001; 
 	Width = 640;
 	Height = 480;
 	FOV = 90.0f;
